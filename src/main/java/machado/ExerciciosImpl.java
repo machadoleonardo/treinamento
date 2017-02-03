@@ -4,11 +4,13 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.By.ById;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -28,14 +30,19 @@ public class ExerciciosImpl implements Exercicio{
 		ExerciciosImpl ex = new ExerciciosImpl();
 		BuscaConfig buscaConfig = new BuscaConfig();
 		buscaConfig.setTermo("Legião Urbana");
-		buscaConfig.setPagina(1);
+		buscaConfig.setPagina(3);
 		buscaConfig.setIntervalo(IntervaloDeBusca.EM_QUALQUER_DATA);
 //		long result = ex.getNumeroAproximadoDoResultadoDaBuscaPor(buscaConfig.getTermo());
-		List<String> linksList = ex.getUrls(buscaConfig.getTermo());
+//		System.out.println(result);
+//		List<String> linksList = ex.getUrls(buscaConfig.getTermo());
+//		for (String url : linksList ){
+//			System.out.println(url);
+//		}
+		List<String> linksList = ex.getUrls(buscaConfig.getTermo(), buscaConfig.getPagina());
 		for (String url : linksList ){
 			System.out.println(url);
 		}
-//		System.out.println(result);
+
 
 	}
 	
@@ -114,9 +121,54 @@ public class ExerciciosImpl implements Exercicio{
 	
 	}
 
+
 	public List<String> getUrls(String termo, int pag) {
-		// TODO Auto-generated method stub
-		return null;
+		WebDriver webdriver = loadWebDrive("https://www.google.com.br/");
+		WebDriverWait wait = new WebDriverWait(webdriver, 10);
+		List<String> urlsList = new ArrayList<>();
+		
+		try{
+			
+			int numberPages = 1;
+			boolean continueFind = true;
+
+			wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.id("lst-ib")));
+			webdriver.findElement(By.id("lst-ib")).sendKeys(termo);
+			webdriver.findElement(By.id("sfdiv")).findElement(By.tagName("button")).submit();
+			Math.round(0.1);	
+			
+
+			while(continueFind && numberPages<pag){
+				System.out.println(numberPages);
+				wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("pnnext")));
+				System.out.println(webdriver.getCurrentUrl());
+				WebElement webElement = webdriver.findElement(By.id("nav"));
+				try{
+					WebElement nextPage = webElement.findElement(By.id("pnnext"));
+					numberPages++;
+					nextPage.click();
+				}catch ( NoSuchElementException e) {
+					continueFind = false;
+				}
+			}
+			List<WebElement> results = webdriver.findElement(By.id("search")).findElements(By.className("r"));
+
+			for (WebElement result : results){
+				urlsList.add(result.findElement(By.tagName("a")).getAttribute("href").toString());
+				
+			}
+			results.size();
+		} catch (Throwable t) {
+
+			t.printStackTrace();
+
+		} finally {
+			webdriver.close();
+			webdriver.quit();
+		}
+
+		return urlsList;
+	
 	}
 
 	public List<String> getUrls(BuscaConfig config) {
