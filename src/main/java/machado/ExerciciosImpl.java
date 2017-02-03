@@ -128,29 +128,13 @@ public class ExerciciosImpl implements Exercicio{
 		List<String> urlsList = new ArrayList<>();
 		
 		try{
-			
-			int numberPages = 1;
-			boolean continueFind = true;
-
 			wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.id("lst-ib")));
 			webdriver.findElement(By.id("lst-ib")).sendKeys(termo);
 			webdriver.findElement(By.id("sfdiv")).findElement(By.tagName("button")).submit();
-			Math.round(0.1);	
-			
-
-			while(continueFind && numberPages<pag){
-				System.out.println(numberPages);
-				wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("pnnext")));
-				System.out.println(webdriver.getCurrentUrl());
-				WebElement webElement = webdriver.findElement(By.id("nav"));
-				try{
-					WebElement nextPage = webElement.findElement(By.id("pnnext"));
-					numberPages++;
-					nextPage.click();
-				}catch ( NoSuchElementException e) {
-					continueFind = false;
-				}
-			}
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav")));
+			String pagina = webdriver.getCurrentUrl()+"&start="+((pag-1)*10);
+			webdriver.get(pagina);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav")));
 			List<WebElement> results = webdriver.findElement(By.id("search")).findElements(By.className("r"));
 
 			for (WebElement result : results){
