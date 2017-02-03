@@ -38,11 +38,14 @@ public class ExerciciosImpl implements Exercicio{
 //		for (String url : linksList ){
 //			System.out.println(url);
 //		}
-		List<String> linksList = ex.getUrls(buscaConfig.getTermo(), buscaConfig.getPagina());
+//		List<String> linksList = ex.getUrls(buscaConfig.getTermo(), buscaConfig.getPagina());
+//		for (String url : linksList ){
+//			System.out.println(url);
+//		}
+		List<String> linksList = ex.getUrls(buscaConfig);
 		for (String url : linksList ){
 			System.out.println(url);
 		}
-
 
 	}
 	
@@ -156,8 +159,64 @@ public class ExerciciosImpl implements Exercicio{
 	}
 
 	public List<String> getUrls(BuscaConfig config) {
-		// TODO Auto-generated method stub
-		return null;
+		WebDriver webdriver = loadWebDrive("https://www.google.com.br/");
+		WebDriverWait wait = new WebDriverWait(webdriver, 10);
+		List<String> urlsList = new ArrayList<>();
+		
+		try{
+			wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.id("lst-ib")));
+			webdriver.findElement(By.id("lst-ib")).sendKeys(config.getTermo());
+			webdriver.findElement(By.id("sfdiv")).findElement(By.tagName("button")).submit();
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav")));
+			String id = null;
+			switch (config.getIntervalo()){
+				case EM_QUALQUER_DATA: 
+					id = "qdr_";
+					break;
+				case NA_ULTIMA_HORA: 
+					id = "qdr_h";
+					break;
+				case NAS_ULTIMAS_24_HORAS: 
+					id = "qdr_d";
+					break;
+				case NA_ULTIMA_SEMANA: 
+					id = "qdr_w";
+					break;
+				case NO_ULTIMO_MES: 
+					id = "qdr_m";
+					break;
+				case NO_ULTIMO_ANO: 
+					id = "qdr_y";
+					break;
+				case INTERVALO_PERSONALIZADO: 
+					id = "qdr_opt";
+					break;
+				
+			}
+			webdriver.findElement(By.id("hdtb-tls")).click();
+			webdriver.findElement(By.id("hdtbMenus")).findElement(By.className("hdtb-mn-hd")).click();
+			webdriver.findElement(By.id("hdtbMenus")).findElement(By.id(id)).click();
+			webdriver.findElement(By.id("sfdiv")).findElement(By.tagName("button")).submit();
+			String pagina = webdriver.getCurrentUrl()+"&start="+((config.getPagina()-1)*10);
+			webdriver.get(pagina);
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav")));
+			List<WebElement> results = webdriver.findElement(By.id("search")).findElements(By.className("r"));
+
+			for (WebElement result : results){
+				urlsList.add(result.findElement(By.tagName("a")).getAttribute("href").toString());
+				
+			}
+			results.size();
+		} catch (Throwable t) {
+
+			t.printStackTrace();
+
+		} finally {
+			webdriver.close();
+			webdriver.quit();
+		}
+
+		return urlsList;
 	}
 
 	public String getWikiResume(String termo) {
